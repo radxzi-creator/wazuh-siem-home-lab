@@ -164,5 +164,23 @@ Refreshed the dashboard — status changed to **active**.
 ## Key takeaway
 
 This build involved two genuinely hard debugging chains: a boot/graphics/resource saga on the manager, and a symlinked-DNS failure that took four failed install attempts and a deep dive into curtin's install logs to actually diagnose on the agent. Neither was solved by a tutorial — both required reading actual error output, forming a hypothesis, testing it, and being wrong more than once before finding the real cause. That process, not the clean end state, is the actual skill this lab was built to practice.
+## Day 3 — Detection testing
 
+### 14. Agent reconnection after network change
+
+**Issue:** Agent showed "disconnected" after switching networks between sessions (home wifi → phone hotspot), changing the manager's IP.
+**Fix:** Updated the agent's `ossec.conf` to point at the manager's current IP, restarted the agent service.
+
+### 15. Confirmed events flowing end-to-end
+
+Verified real security events — login sessions, sudo command execution, agent start/stop — flowing correctly from agent to manager to dashboard.
+<img width="1907" height="1023" alt="Wazuh-agent-01 login activity screenshot" src="https://github.com/user-attachments/assets/1f31bbfc-c618-44d3-a2d2-e92183217a9a" />
+### 16. File Integrity Monitoring — investigation in progress
+
+Confirmed FIM scans are running on schedule (`scan_on_start`, periodic scans logging correctly in `ossec.log`), but new file creation isn't yet triggering a dashboard alert as expected. Ruled out timing and connectivity as causes — likely requires `whodata` mode or closer inspection of rule matching. Flagged as an open item for the next session.
+
+## What's next
+
+- [ ] Resolve FIM new-file alerting (investigate `whodata` mode)
+- [ ] Trigger and confirm a full FIM alert end-to-end
 
