@@ -164,23 +164,56 @@ Refreshed the dashboard — status changed to **active**.
 ## Key takeaway
 
 This build involved two genuinely hard debugging chains: a boot/graphics/resource saga on the manager, and a symlinked-DNS failure that took four failed install attempts and a deep dive into curtin's install logs to actually diagnose on the agent. Neither was solved by a tutorial — both required reading actual error output, forming a hypothesis, testing it, and being wrong more than once before finding the real cause. That process, not the clean end state, is the actual skill this lab was built to practice.
-## Day 3 — Detection testing
+Day 3 — Detection testing and File Integrity Monitoring
 
 ### 14. Agent reconnection after network change
 
-**Issue:** Agent showed "disconnected" after switching networks between sessions (home wifi → phone hotspot), changing the manager's IP.
-**Fix:** Updated the agent's `ossec.conf` to point at the manager's current IP, restarted the agent service.
+**Issue:** Agent showed "disconnected" after switching networks between sessions (home wifi ↔ phone hotspot), changing the manager's IP each time.
+**Fix:** Updated the agent's `ossec.conf` to point at the manager's current IP, restarted the agent service. This recurred multiple times across the session as the network switched.
 
 ### 15. Confirmed events flowing end-to-end
 
 Verified real security events — login sessions, sudo command execution, agent start/stop — flowing correctly from agent to manager to dashboard.
-<img width="1907" height="1023" alt="Wazuh-agent-01 login activity screenshot" src="https://github.com/user-attachments/assets/1f31bbfc-c618-44d3-a2d2-e92183217a9a" />
-### 16. File Integrity Monitoring — investigation in progress
 
-Confirmed FIM scans are running on schedule (`scan_on_start`, periodic scans logging correctly in `ossec.log`), but new file creation isn't yet triggering a dashboard alert as expected. Ruled out timing and connectivity as causes — likely requires `whodata` mode or closer inspection of rule matching. Flagged as an open item for the next session.
+<img width="1907" height="1023" alt="Wazuh-agent-01 login activity screenshot" src="https://github.com/user-attachments/assets/195d90c9-a589-4d7c-8365-9a6baff66ede" />
+
+
+### 16. File Integrity Monitoring — root cause chase
+
+Configured `whodata` mode on the agent for real-time FIM detection (rather than relying on periodic 12-hour scans):
+```bash
+sudo apt install auditd -y
+```
+Edited `ossec.conf`:
+```xml
+<directories whodata="yes">/etc,/usr/bin,/usr/sbin</directories>
+```
+
+Despite confirming `whodata` initialized correctly and `auditd` running healthy, test files created in `/etc` produced no alerts across multiple attempts. Checked agent logs, manager logs, archives, and alert files — all came back empty.
+
+**Root cause, eventually found:** the agent's configured manager IP was stale again — the network had changed since the last connectivity fix, silently disconnecting the agent. Every FIM test during this stretch ran against a disconnected agent, which is why nothing appeared no matter how the detection config was tuned. Not a whodata or logging issue at all — a basic connectivity issue hiding underneath a much more complex-looking symptom.
+
+**Fix:** corrected the manager IP in the agent's `ossec.conf`, restarted, confirmed "active" status in the dashboard, then re-ran the test.
+
+**Result — confirmed working:**
+<img width="1911" height="1012" alt="Screenshot 2026-07-25 192233 file integrity monitoring" src="https://github.com/user-attachments/assets/aad7ec87-944d-432d-8417-8bf9e1a7a835" />
+---
+
+## Current state
+
+✅ Wazuh manager (indexer + manager + dashboard) running and stable
+✅ Wazuh agent installed, registered, and active
+✅ Real-time event flow confirmed (logins, sudo, command execution)
+✅ File Integrity Monitoring configured with `whodata` mode and confirmed working end-to-end
 
 ## What's next
 
-- [ ] Resolve FIM new-file alerting (investigate `whodata` mode)
-- [ ] Trigger and confirm a full FIM alert end-to-end
+- [ ] Expand FIM testing — file modification and deletion events, not just creation
+- [ ] Explore additional detection rules (e.g. unauthorized package installs, privilege escalation)
+- [ ] Consider a static/fixed IP setup for both VMs to eliminate recurring reconnection issues
 
+---
+
+## Key takeaway
+
+The most valuable lesson from this build wasn't a specific command or config — it was a debugging discipline: when a fix doesn't work despite everything *looking* correctly configured, check the most basic layer first (is it even connected?) before assuming the problem is in the complex thing you just changed. The FIM alert wasn't broken by whodata, auditd, or Wazuh's rule engine — it was broken by a disconnected network cable, in digital form, hiding underneath several layers of correctly-configured software.
