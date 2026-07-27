@@ -244,3 +244,63 @@ The most valuable lesson from this build wasn't a specific command or config —
         │ 192.168.0.219    │    |
         └──────────────────┘    |
         +--------------------------+
+
+     ## Day 4 — Purple Team Lab: Kali attacker + Wazuh detection
+
+Extended the lab into a full attack-and-detect scenario: a Kali Linux VM as the attacker, targeting the Wazuh agent, with the manager detecting and classifying the activity in real time.
+
+### 17. Building the Kali attacker VM
+
+Downloaded the Kali installer image via torrent (same Smart App Control block on `.iso` files as before — same workaround). Built as a standard VM: Xfce desktop, top10 + default tool collections, 2GB RAM to keep it workable alongside the existing manager and agent VMs on an 8GB host.
+
+### 18. Network alignment across three VMs
+
+**Issue:** Kali (Bridged, home wifi) and the agent (NAT) were on different network ranges and couldn't reach each other.
+**Fix:** Switched the agent's network adapter to Bridged to match Kali and the manager, confirmed connectivity with `ping` before proceeding.
+
+### 19. Enabling a real attack surface
+
+The agent had no exposed services (confirmed via `nmap -sV`, all 1000 ports closed), so there was nothing to meaningfully attack. Installed and enabled `openssh-server` on the agent to create a genuine, attackable service.
+
+### 20. SSH brute-force simulation and a message queue discovery
+
+Ran repeated failed SSH login attempts from Kali against the agent. Initial attempts produced no alerts at all — traced through `journalctl`, confirmed the failures were being logged locally by `sshd`, but nothing was reaching the manager.
+
+**Root cause:** the agent's logcollector reported: WARNING: Target 'agent' message queue is full (1024). Log lines may be lost 
+Under simultaneous load from three running VMs, the agent's internal event queue overflowed and silently dropped log lines before they could be forwarded — a different failure mode from the earlier DNS/connectivity issues, but the same underlying lesson: verify the basic pipeline before assuming the detection logic itself is at fault.
+
+**Fix:** restarted the agent to clear the queue, reduced concurrent VM load, and re-ran the test.
+### 21. Confirmed: real-time detection and correlation
+
+Repeated failed logins from Kali (`192.168.0.16`) against the agent produced clean, correlated detections:
+
+- `Rule 5710` (level 5) — *"sshd: Attempt to login using a non-existent user"* — individual failed attempts
+- `Rule 2502` (level 10) — *"User missed the password more than one time"* — pattern correlation
+- `Rule 5712` (level 10) — *"sshd: brute force trying to get access to the system. Non-existent user"* — full brute-force classification
+
+Each alert automatically tagged with GDPR, HIPAA, PCI DSS, and NIST 800-53 compliance mappings.
+
+📸 [SCREENSHOT: Threat Hunting events showing the SSH brute-force detection escalation — 108 hits, rules 5710/2502/5712]
+
+---<img width="1917" height="1023" alt="Screenshot 2026-07-27 233700" src="https://github.com/user-attachments/assets/f011149e-eb78-4a97-a63b-9fccd1e671ea" />
+
+
+## Current state
+
+✅ Wazuh manager, agent, and Kali attacker VM all deployed and networked together
+✅ Real-time SSH brute-force attack simulated and detected end-to-end
+✅ Wazuh's correlation engine confirmed escalating repeated failures into a proper brute-force classification
+✅ File Integrity Monitoring confirmed working with `whodata` mode
+✅ Full build documented with real troubleshooting, not just clean happy-path steps
+
+## What's next
+
+- [ ] Configure Wazuh Active Response to automatically block the attacking IP when the brute-force rule fires
+- [ ] Map detections explicitly to MITRE ATT&CK techniques in the dashboard
+- [ ] Expand attack scenarios beyond SSH (e.g. simulated privilege escalation, unauthorized package installs)
+
+---
+
+## Key takeaway
+
+This stage's hardest problem wasn't a misconfigured detection rule — it was a silently overflowing message queue caused by running three resource-hungry VMs at once. The lesson carried over directly from Day 3: when a signal that should clearly be there isn't showing up, check the pipeline itself — connectivity, resource limits, queues — before assuming the detection logic needs tuning. Twice now, a complex-looking detection gap turned out to be a basic infrastructure issue underneath it.<img/>
