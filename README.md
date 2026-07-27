@@ -217,3 +217,30 @@ Despite confirming `whodata` initialized correctly and `auditd` running healthy,
 ## Key takeaway
 
 The most valuable lesson from this build wasn't a specific command or config — it was a debugging discipline: when a fix doesn't work despite everything *looking* correctly configured, check the most basic layer first (is it even connected?) before assuming the problem is in the complex thing you just changed. The FIM alert wasn't broken by whodata, auditd, or Wazuh's rule engine — it was broken by a disconnected network cable, in digital form, hiding underneath several layers of correctly-configured software.
+[Host Machine - Windows 11]
+     |
+     | VirtualBox
+     |
+     +-- [Manager VM] -----------+
+     |  Ubuntu Server 22.04      |
+     |  RAM: 4GB                |
+     |  ┌──────────────────┐    |
+     |  │ Wazuh Indexer    │    |
+     |  │ Wazuh Manager    │    |
+     |  │ Wazuh Dashboard  │    |
+     |  └──────────────────┘    |
+     |  Ports: 443, 55000, 1514 |
+     +--------------------------+
+     |         |
+     |         | Agent → Manager (1514/tcp)
+     |         |
+     +-- [Agent VM] -------------+
+        Ubuntu Server 22.04      |
+        RAM: 1.5-2GB            |
+        ┌──────────────────┐    |
+        │ Wazuh Agent      │    |
+        │ ossec.conf       │    |
+        │ MANAGER_IP:      │    |
+        │ 192.168.0.219    │    |
+        └──────────────────┘    |
+        +--------------------------+
