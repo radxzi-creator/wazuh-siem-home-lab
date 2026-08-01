@@ -348,15 +348,16 @@ sudo iptables -L -n
 
 <img width="550" height="185" alt="CHAIN INPUT" src="https://github.com/user-attachments/assets/04d0682f-b2c4-4a38-8318-459a74ab0633" />
 <img width="580" height="76" alt="Host" src="https://github.com/user-attachments/assets/a8ee10f8-87f3-4e86-ba6d-cf2134d98559" />
-Current state
 
+
+Current state
 ✅ Full purple team loop: Kali attacker → Wazuh detection → automated firewall response ✅ Brute-force detection correctly mapped to MITRE ATT&CK (T1110, Credential Access) ✅ Active Response confirmed automatically blocking the attacking IP within seconds of detection ✅ Manager, agent, and Kali all deployed, networked, and tested together ✅ File Integrity Monitoring working with whodata real-time mode
 
 What's next
  Expand Active Response to additional rule types (e.g. unauthorized file changes, privilege escalation)
  Set up a static IP configuration to eliminate recurring reconnection issues after network changes
  Explore Wazuh's automatic unblock behavior after the timeout window expires
-Key takeaway
+
+ Key takeaway
 
 This stage's real lesson was less about Active Response itself, and more about trusting the diagnostic process even when the failure looks like it should be in the new thing you just built. Every apparent "active response isn't working" moment tonight was actually something else — a leftover comment tag, a resource spike, a stale IP after a network switch. None of them were fixed by touching the active response config a second time; all of them were fixed by checking the layer underneath it first. That's now a consistent pattern across this entire project, and it's the actual skill worth taking away from it.
-
