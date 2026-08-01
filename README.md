@@ -311,8 +311,18 @@ Closed the loop from detection to automated defense: when the brute-force rule f
 22. Configuring Active Response
 
 Wazuh ships with a set of pre-built response scripts. Confirmed firewall-drop was available:
+
+
+
 sudo ls /var/ossec/active-response/bin/
+
+
+
+
 Added an active response block to the manager's ossec.conf, linking the firewall-drop command directly to the brute-force detection rule from Day 4:
+
+
+
 <active-response>
   <disabled>no</disabled>
   <command>firewall-drop</command>
@@ -320,6 +330,8 @@ Added an active response block to the manager's ossec.conf, linking the firewall
   <rules_id>5712</rules_id>
   <timeout>600</timeout>
 </active-response>
+
+
 This tells the manager: whenever rule 5712 (brute-force, level 10) fires, automatically run firewall-drop against the source IP for 10 minutes
 23. Debugging the config edit and a resource crash
 
@@ -332,6 +344,7 @@ Issue 3 (recurring): After switching networks (home wifi → mobile hotspot) mid
 24. Confirmed: full attack → detect → respond loop
 
 With networking correctly aligned, repeated the SSH brute-force from Kali. The alert log confirmed the complete chain firing correctly:
+
 "rule": {
   "level": 10,
   "description": "sshd: brute force trying to get access to the system. Non existent user.",
@@ -343,7 +356,16 @@ With networking correctly aligned, repeated the SSH brute-force from Kali. The a
   }
 },
 "program": "active-response/bin/firewall-drop"
+
+
+
+
+
+
 Confirmed the actual firewall block took effect:
+
+
+
 sudo iptables -L -n
 
 <img width="550" height="185" alt="CHAIN INPUT" src="https://github.com/user-attachments/assets/04d0682f-b2c4-4a38-8318-459a74ab0633" />
