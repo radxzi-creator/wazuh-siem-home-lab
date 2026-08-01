@@ -285,6 +285,8 @@ Each alert automatically tagged with GDPR, HIPAA, PCI DSS, and NIST 800-53 compl
 ---<img width="1917" height="1023" alt="Screenshot 2026-07-27 233700" src="https://github.com/user-attachments/assets/f011149e-eb78-4a97-a63b-9fccd1e671ea" />
 
 
+
+
 ## Current state
 
 ✅ Wazuh manager, agent, and Kali attacker VM all deployed and networked together
