@@ -305,17 +305,25 @@ Each alert automatically tagged with GDPR, HIPAA, PCI DSS, and NIST 800-53 compl
 
 ## Key takeaway
 
-This stage's hardest problem wasn't a misconfigured detection rule — it was a silently overflowing message queue caused by running three resource-hungry VMs at once. The lesson carried over directly from Day 3: when a signal that should clearly be there isn't showing up, check the pipeline itself — connectivity, resource limits, queues — before assuming the detection logic needs tuning. Twice now, a complex-looking detection gap turned out to be a basic infrastructure issue underneath it.<img/>
+This stage's hardest problem wasn't a misconfigured detection rule — it was a silently overflowing message queue caused by running three resource-hungry VMs at once. The lesson carried over directly from Day 3: when a signal that should clearly be there isn't showing up, check the pipeline itself — connectivity, resource limits, queues — before assuming the detection logic needs tuning. Twice now, a complex-looking detection gap turned out to be a basic infrastructure issue underneath it.<img/> 
+
+
+
+
 Day 5 — Automated Response with Wazuh Active Response
+
+
+
 Closed the loop from detection to automated defense: when the brute-force rule fires, Wazuh now automatically blocks the attacking IP at the firewall level, with no manual intervention.
+
+
+
 22. Configuring Active Response
 
 Wazuh ships with a set of pre-built response scripts. Confirmed firewall-drop was available:
 
 
-
 sudo ls /var/ossec/active-response/bin/
-
 
 
 
@@ -333,6 +341,8 @@ Added an active response block to the manager's ossec.conf, linking the firewall
 
 
 This tells the manager: whenever rule 5712 (brute-force, level 10) fires, automatically run firewall-drop against the source IP for 10 minutes
+
+
 23. Debugging the config edit and a resource crash
 
 Issue 1: First edit accidentally left the block partially wrapped in a leftover comment marker (<!--), so Wazuh silently ignored the new configuration entirely. Fix: Removed the stray comment tag, leaving a clean, standalone <active-response> block.
