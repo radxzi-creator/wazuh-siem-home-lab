@@ -304,19 +304,13 @@ Each alert automatically tagged with GDPR, HIPAA, PCI DSS, and NIST 800-53 compl
 ## Key takeaway
 
 This stage's hardest problem wasn't a misconfigured detection rule — it was a silently overflowing message queue caused by running three resource-hungry VMs at once. The lesson carried over directly from Day 3: when a signal that should clearly be there isn't showing up, check the pipeline itself — connectivity, resource limits, queues — before assuming the detection logic needs tuning. Twice now, a complex-looking detection gap turned out to be a basic infrastructure issue underneath it.<img/>
-## Day 5 — Automated Response with Wazuh Active Response
-
+Day 5 — Automated Response with Wazuh Active Response
 Closed the loop from detection to automated defense: when the brute-force rule fires, Wazuh now automatically blocks the attacking IP at the firewall level, with no manual intervention.
+22. Configuring Active Response
 
-### 22. Configuring Active Response
-
-Wazuh ships with a set of pre-built response scripts. Confirmed `firewall-drop` was available:
-```bash
+Wazuh ships with a set of pre-built response scripts. Confirmed firewall-drop was available:
 sudo ls /var/ossec/active-response/bin/
-```
-
-Added an active response block to the manager's `ossec.conf`, linking the `firewall-drop` command directly to the brute-force detection rule from Day 4:
-```xml
+Added an active response block to the manager's ossec.conf, linking the firewall-drop command directly to the brute-force detection rule from Day 4:
 <active-response>
   <disabled>no</disabled>
   <command>firewall-drop</command>
@@ -324,26 +318,18 @@ Added an active response block to the manager's `ossec.conf`, linking the `firew
   <rules_id>5712</rules_id>
   <timeout>600</timeout>
 </active-response>
-```
+This tells the manager: whenever rule 5712 (brute-force, level 10) fires, automatically run firewall-drop against the source IP for 10 minutes
+23. Debugging the config edit and a resource crash
 
-This tells the manager: whenever rule `5712` (brute-force, level 10) fires, automatically run `firewall-drop` against the source IP for 10 minutes.
+Issue 1: First edit accidentally left the block partially wrapped in a leftover comment marker (<!--), so Wazuh silently ignored the new configuration entirely. Fix: Removed the stray comment tag, leaving a clean, standalone <active-response> block.
 
-### 23. Debugging the config edit and a resource crash
+Issue 2: Manager restart triggered a kernel-level out-of-memory kill (Out of memory: Killed process wazuh-db) under host resource pressure. Fix: Closed unnecessary VMs, waited for a clean window, retried the restart — came up healthy.
 
-**Issue 1:** First edit accidentally left the block partially wrapped in a leftover comment marker (`<!--`), so Wazuh silently ignored the new configuration entirely.
-**Fix:** Removed the stray comment tag, leaving a clean, standalone `<active-response>` block.
+Issue 3 (recurring): After switching networks (home wifi → mobile hotspot) mid-session, both the agent's configured manager IP and the attack test's target IP were stale, causing the attack to silently miss the manager entirely (no alerts logged at all). Diagnosed by checking current IPs on all three VMs and confirming the mismatch, rather than assuming the active response config itself was broken. Fix: Updated the agent's ossec.conf to the manager's current IP, restarted, re-ran the test against the correct current addresses.
 
-**Issue 2:** Manager restart triggered a kernel-level out-of-memory kill (`Out of memory: Killed process wazuh-db`) under host resource pressure.
-**Fix:** Closed unnecessary VMs, waited for a clean window, retried the restart — came up healthy.
-
-**Issue 3 (recurring):** After switching networks (home wifi → mobile hotspot) mid-session, both the agent's configured manager IP and the attack test's target IP were stale, causing the attack to silently miss the manager entirely (no alerts logged at all). Diagnosed by checking current IPs on all three VMs and confirming the mismatch, rather than assuming the active response config itself was broken.
-**Fix:** Updated the agent's `ossec.conf` to the manager's current IP, restarted, re-ran the test against the correct current addresses.
-
-### 24. Confirmed: full attack → detect → respond loop
+24. Confirmed: full attack → detect → respond loop
 
 With networking correctly aligned, repeated the SSH brute-force from Kali. The alert log confirmed the complete chain firing correctly:
-
-```json
 "rule": {
   "level": 10,
   "description": "sshd: brute force trying to get access to the system. Non existent user.",
@@ -355,32 +341,20 @@ With networking correctly aligned, repeated the SSH brute-force from Kali. The a
   }
 },
 "program": "active-response/bin/firewall-drop"
-```
-
 Confirmed the actual firewall block took effect:
-```bash
 sudo iptables -L -n
-<img width="550" height="185" alt="CHAIN INPUT" src="https://github.com/user-attachments/assets/78dbbadd-2f8f-4ea9-8074-52b9e8161f81" />
 
-Confirmed from the attacker's side — Kali could no longer reach the agent at all:
-<img width="580" height="76" alt="Host" src="https://github.com/user-attachments/assets/a385c4bb-4465-461a-9137-1110edf8318f" />
+<img width="550" height="185" alt="CHAIN INPUT" src="https://github.com/user-attachments/assets/04d0682f-b2c4-4a38-8318-459a74ab0633" />
+<img width="580" height="76" alt="Host" src="https://github.com/user-attachments/assets/a8ee10f8-87f3-4e86-ba6d-cf2134d98559" />
+Current state
 
-## Current state
+✅ Full purple team loop: Kali attacker → Wazuh detection → automated firewall response ✅ Brute-force detection correctly mapped to MITRE ATT&CK (T1110, Credential Access) ✅ Active Response confirmed automatically blocking the attacking IP within seconds of detection ✅ Manager, agent, and Kali all deployed, networked, and tested together ✅ File Integrity Monitoring working with whodata real-time mode
 
-✅ Full purple team loop: Kali attacker → Wazuh detection → automated firewall response
-✅ Brute-force detection correctly mapped to MITRE ATT&CK (T1110, Credential Access)
-✅ Active Response confirmed automatically blocking the attacking IP within seconds of detection
-✅ Manager, agent, and Kali all deployed, networked, and tested together
-✅ File Integrity Monitoring working with `whodata` real-time mode
+What's next
+ Expand Active Response to additional rule types (e.g. unauthorized file changes, privilege escalation)
+ Set up a static IP configuration to eliminate recurring reconnection issues after network changes
+ Explore Wazuh's automatic unblock behavior after the timeout window expires
+Key takeaway
 
-## What's next
+This stage's real lesson was less about Active Response itself, and more about trusting the diagnostic process even when the failure looks like it should be in the new thing you just built. Every apparent "active response isn't working" moment tonight was actually something else — a leftover comment tag, a resource spike, a stale IP after a network switch. None of them were fixed by touching the active response config a second time; all of them were fixed by checking the layer underneath it first. That's now a consistent pattern across this entire project, and it's the actual skill worth taking away from it.
 
-- [ ] Expand Active Response to additional rule types (e.g. unauthorized file changes, privilege escalation)
-- [ ] Set up a static IP configuration to eliminate recurring reconnection issues after network changes
-- [ ] Explore Wazuh's automatic unblock behavior after the timeout window expires
-
----
-
-## Key takeaway
-
-This stage's real lesson was less about Active Response itself, and more about *trusting the diagnostic process even when the failure looks like it should be in the new thing you just built.* Every apparent "active response isn't working" moment tonight was actually something else — a leftover comment tag, a resource spike, a stale IP after a network switch. None of them were fixed by touching the active response config a second time; all of them were fixed by checking the layer underneath it first. That's now a consistent pattern across this entire project, and it's the actual skill worth taking away from it.
