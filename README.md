@@ -351,11 +351,18 @@ sudo iptables -L -n
 
 
 Current state
-✅ Full purple team loop: Kali attacker → Wazuh detection → automated firewall response ✅ Brute-force detection correctly mapped to MITRE ATT&CK (T1110, Credential Access) ✅ Active Response confirmed automatically blocking the attacking IP within seconds of detection ✅ Manager, agent, and Kali all deployed, networked, and tested together ✅ File Integrity Monitoring working with whodata real-time mode
+✅ Full purple team loop: Kali attacker → Wazuh detection → automated firewall response
+✅ Brute-force detection correctly mapped to MITRE ATT&CK (T1110, Credential Access) 
+✅ Active Response confirmed automatically blocking the attacking IP within seconds of detection ✅ Manager, agent, and Kali all deployed, networked, and tested together 
+✅ File Integrity Monitoring working with whodata real-time mode
 
 What's next
+
  Expand Active Response to additional rule types (e.g. unauthorized file changes, privilege escalation)
+ 
  Set up a static IP configuration to eliminate recurring reconnection issues after network changes
+
+ 
  Explore Wazuh's automatic unblock behavior after the timeout window expires
 
  Key takeaway
