@@ -360,9 +360,11 @@ With networking correctly aligned, repeated the SSH brute-force from Kali. The a
 Confirmed the actual firewall block took effect:
 ```bash
 sudo iptables -L -n
-```<img width="550" height="185" alt="CHAIN INPUT" src="https://github.com/user-attachments/assets/7dd70b65-e731-4ae7-bba9-2a8616136322" />
+<img width="550" height="185" alt="CHAIN INPUT" src="https://github.com/user-attachments/assets/78dbbadd-2f8f-4ea9-8074-52b9e8161f81" />
+
 Confirmed from the attacker's side — Kali could no longer reach the agent at all:
-<img width="580" height="76" alt="Host" src="https://github.com/user-attachments/assets/8ef1bbcb-93cb-4171-a6aa-0544aac3f6cc" />
+<img width="580" height="76" alt="Host" src="https://github.com/user-attachments/assets/a385c4bb-4465-461a-9137-1110edf8318f" />
+
 ## Current state
 
 ✅ Full purple team loop: Kali attacker → Wazuh detection → automated firewall response
