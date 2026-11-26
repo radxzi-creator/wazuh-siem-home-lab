@@ -419,25 +419,22 @@ Firewall verification on the Ubuntu agent confirmed:
 - Packets recorded: 33
 
 ### Validation Status
+
 | Test | Result |
 |---|---|
 | SSH attack simulation | Passed |
 | Wazuh detection | Passed |
 | MITRE mapping | Confirmed |
 | Firewall blocking | Confirmed |
-| Automatic 600-second rule removal | Passed<img width="797" height="701" alt="Screenshot 2026-11-26 155048" src="https://github.com/user-attachments/assets/9058fcc1-82eb-4e68-9206-8634b6285756" /> 
-### Firewall Automatic Unblocking Evidence
+| Automatic 600-second rule removal | Passed |
+
 ### Firewall Automatic Unblocking Evidence
 
-![Wazuh firewall timeout verification](firewall-timeout-eviddence.png)
+<img width="797" height="701" alt="Firewall timeout verification" src="https://github.com/user-attachments/assets/9058fcc1-82eb-4e68-9206-8634b6285756" />
 
 ### Conclusion
 
 The lab successfully demonstrated SSH brute-force detection and automated firewall blocking using Wazuh.
-
-
-
-
 
 
 
