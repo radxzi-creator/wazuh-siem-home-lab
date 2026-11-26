@@ -428,11 +428,6 @@ Firewall verification on the Ubuntu agent confirmed:
 
 ### Firewall Evidence
 
-![Firewall timeout verification](https://github.com/user-attachments/assets/9058fcc1-82eb-4e68-9206-8634b6285756)
-
 ### Conclusion
 
-The lab successfully demonstrated SSH brute-force detection and automated firewall blocking using Wazuh.
-
-
-![Wazuh firewall timeout verification](firewall-timeout-eviddence.png)
+The lab successfully demonstrated SSH brute-force detection and automated firewall blocking using Wazuh, including automatic removal of the firewall block after the configured 600-second timeout.
