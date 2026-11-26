@@ -1,4 +1,3 @@
-<img width="797" height="701" alt="firewall-timeout-eviddence png" src="https://github.com/user-attachments/assets/f23b13e4-e8cf-44c5-a06d-8b448dd76cb7" />
 # Wazuh SIEM Home Lab — Detection & Log Analysis
 
 A self-built SIEM environment using Wazuh, VirtualBox, and Ubuntu Server, built to gain hands-on experience with log monitoring, agent-based detection, and file integrity monitoring (FIM) — skills that complement my existing [AWS SOC Detection Pipeline](#) project.
