@@ -417,7 +417,6 @@ Firewall verification on the Ubuntu agent confirmed:
 - Source IP: `172.20.10.5`
 - Action: `DROP`
 - Packets recorded: 33
-
 ### Validation Status
 
 | Test | Result |
@@ -428,29 +427,13 @@ Firewall verification on the Ubuntu agent confirmed:
 | Firewall blocking | Confirmed |
 | Automatic 600-second rule removal | Passed |
 
-### Firewall Automatic Unblocking Evidence
+### Firewall Evidence
 
-<img width="797" height="701" alt="Firewall timeout verification" src="https://github.com/user-attachments/assets/9058fcc1-82eb-4e68-9206-8634b6285756" />
+![Firewall timeout verification](https://github.com/user-attachments/assets/9058fcc1-82eb-4e68-9206-8634b6285756)
 
 ### Conclusion
 
 The lab successfully demonstrated SSH brute-force detection and automated firewall blocking using Wazuh.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 ![Wazuh firewall timeout verification](firewall-timeout-eviddence.png)
