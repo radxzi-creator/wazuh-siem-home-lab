@@ -390,3 +390,44 @@ sudo iptables -L -n
 ## Key takeaway
 
 This stage's real lesson was less about Active Response itself, and more about *trusting the diagnostic process even when the failure looks like it should be in the new thing you just built.* Every apparent "active response isn't working" moment tonight was actually something else — a leftover comment tag, a resource spike, a stale IP after a network switch. None of them were fixed by touching the active response config a second time; all of them were fixed by checking the layer underneath it first. That's now a consistent pattern across this entire project, and it's the actual skill worth taking away from it.
+
+
+## SSH Brute-Force Detection & Active Response
+
+### Objective
+Simulate SSH brute-force attempts against an Ubuntu endpoint and validate Wazuh detection and automated firewall blocking.
+
+### Lab Environment
+- Wazuh Manager: `172.20.10.3`
+- Ubuntu Agent: `172.20.10.4`
+- Kali Linux Attacker: `172.20.10.5`
+
+### Detection Results
+- Wazuh Rule ID: `5712`
+- Alert severity: Level 10
+- Detection: SSH brute-force attempts using a non-existent user.
+- MITRE ATT&CK: `T1110 – Brute Force`
+
+### Active Response
+Wazuh triggered `firewall-drop` against the attacker's IP address.
+
+Firewall verification on the Ubuntu agent confirmed:
+
+- Source IP: `172.20.10.5`
+- Action: `DROP`
+- Packets recorded: 33
+
+### Validation Status
+| Test | Result |
+|---|---|
+| SSH attack simulation | Passed |
+| Wazuh detection | Passed |
+| MITRE mapping | Confirmed |
+| Firewall blocking | Confirmed |
+| Automatic 600-second rule removal | Passed<img width="797" height="701" alt="Screenshot 2026-11-26 155048" src="https://github.com/user-attachments/assets/9058fcc1-82eb-4e68-9206-8634b6285756" /> 
+### Firewall Automatic Unblocking Evidence
+
+![Wazuh firewall timeout verification](firewall-timeout-evidence.png)
+### Conclusion
+
+The lab successfully demonstrated SSH brute-force detection and automated firewall blocking using Wazuh.
